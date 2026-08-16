@@ -12,12 +12,16 @@ import pyodbc
 
 DADOS_CONEXAO = (
     r"Driver={ODBC Driver 17 for SQL Server};"
-    r"Server=localhost\sqlexpress;"
+    r"Server=localhost\SQLEXPRESS;"
     r"Database=biblioteca;"
     r"UID=sa;"
     r"PWD=1234;"
     r"TrustServerCertificate=yes;"
 )
+
+# Velocidades da interface. Aumente os valores para deixar mais lento.
+ATRASO_TEXTO = 0.035
+ATRASO_CARREGAMENTO = 0.08
 
 
 # ============================================================
@@ -32,7 +36,7 @@ def esperar(segundos=1):
     time.sleep(segundos)
 
 
-def efeito_texto(texto, atraso=0.01):
+def efeito_texto(texto, atraso=ATRASO_TEXTO):
     """Escreve texto com efeito de terminal."""
     for caractere in texto:
         sys.stdout.write(caractere)
@@ -52,7 +56,7 @@ def barra_carregamento(
     for _ in range(15):
         sys.stdout.write("█")
         sys.stdout.flush()
-        time.sleep(0.04 * multiplicador_tempo)
+        time.sleep(ATRASO_CARREGAMENTO * multiplicador_tempo)
 
     print(" [OK]")
     esperar(0.3 * multiplicador_tempo)
@@ -80,7 +84,7 @@ def conectar_banco():
         print("  - O SQL Server está executando.")
         print("  - O SQL Server Express está em localhost\\SQLEXPRESS.")
         print("  - O banco 'biblioteca' existe.")
-        print("  - O usuário e senha estão corretos.")
+        print("  - Sua conta do Windows tem permissão no banco 'biblioteca'.")
         print("  - O ODBC Driver 17 for SQL Server está instalado.")
 
         input("\nPressione ENTER para sair...")
@@ -437,6 +441,51 @@ def mostrar_ajuda():
     print()
 
 
+def mostrar_instrucoes_operacao():
+    """Explica as regras antes de iniciar o cronômetro."""
+
+    print("\n" + "=" * 70)
+    efeito_texto(">>> BRIEFING DA OPERAÇÃO")
+    print("=" * 70)
+
+    print(
+        "\nOBJETIVO\n"
+        "  A dupla deverá resolver dois desafios consultando os dados\n"
+        "  da biblioteca. Descubram a informação pedida e enviem a\n"
+        "  resposta correta no terminal.\n"
+    )
+
+    print(
+        "COMO INVESTIGAR\n"
+        "  tabela alunos       -> mostra os alunos e seus IDs\n"
+        "  tabela livros       -> mostra os livros e seus IDs\n"
+        "  tabela emprestimos  -> liga aluno, livro e empréstimo\n"
+    )
+
+    print(
+        "COMO RESPONDER\n"
+        "  Digite: chutar sua resposta\n"
+        "  Exemplo: chutar Adna Joyce\n"
+        "\n"
+        "  Se a missão pedir aluno e livro, separe-os por vírgula:\n"
+        "  Exemplo: chutar Adna Joyce, Arthur e os Minimoys\n"
+    )
+
+    print(
+        "OUTROS COMANDOS\n"
+        "  ajuda  -> mostra novamente a lista de comandos\n"
+        "  sair   -> abandona a operação atual\n"
+    )
+
+    print(
+        "RANKING\n"
+        "  O cronômetro só começa depois que vocês pressionarem ENTER.\n"
+        "  Resolvam os desafios corretamente e no menor tempo possível."
+    )
+
+    print("=" * 70)
+
+
 # ============================================================
 # EXIBIR TABELAS
 # ============================================================
@@ -701,8 +750,7 @@ def executar_missao(cursor, conexao):
     limpar_tela()
 
     efeito_texto(
-        ">>> ACESSO LIBERADO AO TERMINAL SECRETO",
-        atraso=0.02
+        ">>> ACESSO LIBERADO AO TERMINAL SECRETO"
     )
 
     print("-" * 55)
@@ -729,17 +777,8 @@ def executar_missao(cursor, conexao):
 
     efeito_texto(
         f">>> OPERAÇÃO INICIADA POR: "
-        f"{nomes_dupla.upper()}",
-        atraso=0.02
+        f"{nomes_dupla.upper()}"
     )
-
-    efeito_texto(
-        ">>> O cronômetro foi disparado. "
-        "Sejam rápidos e precisos!\n",
-        atraso=0.01
-    )
-
-    esperar(0.5)
 
     # --------------------------------------------------------
     # GERAR MISSÕES
@@ -786,6 +825,20 @@ def executar_missao(cursor, conexao):
     ]
 
     pontuacao_total = 0.0
+
+    mostrar_instrucoes_operacao()
+
+    input(
+        "\nPressione ENTER para iniciar a missão "
+        "e disparar o cronômetro..."
+    )
+
+    limpar_tela()
+
+    efeito_texto(
+        ">>> O cronômetro foi disparado. "
+        "Sejam rápidos e precisos!\n"
+    )
 
     tempo_inicio = time.time()
 
@@ -927,7 +980,13 @@ def executar_missao(cursor, conexao):
                         f"pontos."
                     )
 
-                    esperar(1)
+                    if numero_fase < len(fases):
+                        input(
+                            "\nPressione ENTER para ir "
+                            "ao próximo desafio..."
+                        )
+                    else:
+                        esperar(1)
 
                     limpar_tela()
 
@@ -967,13 +1026,11 @@ def executar_missao(cursor, conexao):
     print("=" * 70)
 
     efeito_texto(
-        ">>> OPERAÇÃO FINALIZADA COM SUCESSO!",
-        atraso=0.02
+        ">>> OPERAÇÃO FINALIZADA COM SUCESSO!"
     )
 
     efeito_texto(
-        ">>> SISTEMA DESCRIPTOGRAFADO!",
-        atraso=0.02
+        ">>> SISTEMA DESCRIPTOGRAFADO!"
     )
 
     print("=" * 70)
